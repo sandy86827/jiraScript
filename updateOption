@@ -1,0 +1,54 @@
+import com.atlassian.jira.component.ComponentAccessor
+import com.atlassian.jira.issue.MutableIssue
+import com.atlassian.jira.event.type.EventDispatchOption
+
+def issue = event.issue
+def customFieldManager = ComponentAccessor.customFieldManager
+def issueManager = ComponentAccessor.issueManager
+def customField_WAREHOUSE = customFieldManager.getCustomFieldObjects(issue).findByName('返却倉庫')
+def value_WAREHOUSE = issue.getCustomFieldValue(customField_WAREHOUSE)?.toString()
+def issueToUpdate = event.issue as MutableIssue
+
+def customField = customFieldManager.getCustomFieldObjectsByName("返却倉庫番号").first()
+def availableOptions = ComponentAccessor.optionsManager.getOptions(customField.getRelevantConfig(issue))
+
+def issueType1 = ["AN (顧客資産解析)", "FR (顧客資産WJ再生)", "IR (顧客資産DEJ修理)"]
+def issueType2 = ["AR (代替機発送➜返却)", "SR (返却→代替機発送)", "MD (代替機発送)"]
+def issueType3 = ["RC (不明返却品確認)"]
+
+def warehouse1 = "大阪営業所-O1"
+def warehouse2 = "日本物流倉庫-O2"
+def warehouse3 = "南船橋FLTC倉庫-T1"
+
+def optionToSet = null
+
+if (issueType1.contains(issue.getIssueType().name)) {
+    if(value_WAREHOUSE == warehouse1){
+        optionToSet = availableOptions.find { it.value == "O13B" }
+    } else if (value_WAREHOUSE == warehouse2){
+        optionToSet = availableOptions.find { it.value == "O23B" }
+    } else if (value_WAREHOUSE == warehouse3) {
+        optionToSet = availableOptions.find { it.value == "T13B" }
+    }
+} else if(issueType2.contains(issue.getIssueType().name)) {
+    if(value_WAREHOUSE == warehouse1){
+        optionToSet = availableOptions.find { it.value == "O139" }
+    } else if (value_WAREHOUSE == warehouse2){
+        optionToSet = availableOptions.find { it.value == "O239" }
+    } else if (value_WAREHOUSE == warehouse3) {
+        optionToSet = availableOptions.find { it.value == "T139" }
+    }
+} else if(issueType3.contains(issue.getIssueType().name)) {
+    if(value_WAREHOUSE == warehouse1){
+        optionToSet = availableOptions.find { it.value == "O13A" }
+    } else if (value_WAREHOUSE == warehouse2){
+        optionToSet = availableOptions.find { it.value == "O23A" }
+    } else if (value_WAREHOUSE == warehouse3) {
+        optionToSet = availableOptions.find { it.value == "T13A" }
+    }
+}
+
+if (optionToSet != null) {
+    issue.setCustomFieldValue(customField, optionToSet)
+    issueManager.updateIssue(event.user, issueToUpdate, EventDispatchOption.ISSUE_UPDATED, false)
+}
