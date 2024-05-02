@@ -1,0 +1,30 @@
+import com.atlassian.jira.component.ComponentAccessor
+import com.atlassian.jira.issue.MutableIssue
+import com.atlassian.jira.event.type.EventDispatchOption
+
+
+def transientVars = transientVars ?: [:]
+def issue = transientVars["issue"] as MutableIssue
+//放在post function裡要用這個方式get目前的issue
+
+def customFieldManager = ComponentAccessor.customFieldManager
+def userManager = ComponentAccessor.userManager
+def issueManager = ComponentAccessor.issueManager
+def customField_ShipType = customFieldManager.getCustomFieldObjects(issue).findByName('出荷機種') //muti
+def customField_ShipAmount = customFieldManager.getCustomFieldObjects(issue).findByName('出荷台数(機器)')
+def customField_ReturnType = customFieldManager.getCustomFieldObjects(issue).findByName('不良機種') //single
+def customField_ReturnAmount = customFieldManager.getCustomFieldObjects(issue).findByName('不良台数')
+
+def value_ShipType = issue.getCustomFieldValue(customField_ShipType)?: []
+def value_ShipAmount = issue.getCustomFieldValue(customField_ShipAmount)?.toString()
+def value_ReturnType = issue.getCustomFieldValue(customField_ReturnType)?.toString()
+def value_ReturnAmount = issue.getCustomFieldValue(customField_ReturnAmount)?.toString()
+
+
+
+if (value_ShipType.isEmpty() &&  value_ShipAmount== null) {
+
+    issue.setCustomFieldValue(customField_ShipType, [value_ReturnType])
+    issue.setCustomFieldValue(customField_ShipAmount, value_ReturnAmount)
+    issueManager.updateIssue(ComponentAccessor.jiraAuthenticationContext.loggedInUser, issue, EventDispatchOption.DO_NOT_DISPATCH, false)
+} 

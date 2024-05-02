@@ -1,0 +1,35 @@
+ 
+import com.atlassian.jira.component.ComponentAccessor
+import com.atlassian.jira.issue.MutableIssue
+import com.atlassian.jira.event.type.EventDispatchOption
+ 
+ 
+def transientVars = transientVars ?: [:]
+def issue = transientVars["issue"] as MutableIssue
+ 
+ 
+def customFieldManager = ComponentAccessor.customFieldManager
+def userManager = ComponentAccessor.userManager
+def issueManager = ComponentAccessor.issueManager
+def customField_WAREHOUSE = customFieldManager.getCustomFieldObjects(issue).findByName('返却倉庫')
+def value_WAREHOUSE = issue.getCustomFieldValue(customField_WAREHOUSE)?.toString()
+ 
+def user1 = userManager.getUserByName("TEIGI.KOU")
+def user2 = userManager.getUserByName("LEO.WD.WANG")
+def user3 = userManager.getUserByName("BENNO.CHEN")
+ 
+def warehouse1 = "大阪営業所-O1"
+def warehouse2 = "日本物流倉庫-O2"
+def warehouse3 = "南船橋FLTC倉庫-T1"
+ 
+ 
+if (value_WAREHOUSE == warehouse1 ) {
+    issue.setAssignee(user1)
+    issueManager.updateIssue(user1, issue, EventDispatchOption.ISSUE_ASSIGNED, false)
+} else if(value_WAREHOUSE == warehouse2) {
+    issue.setAssignee(user2)
+    issueManager.updateIssue(user2, issue, EventDispatchOption.ISSUE_ASSIGNED, false)
+} else if(value_WAREHOUSE == warehouse3) {
+    issue.setAssignee(user3)
+    issueManager.updateIssue(user3, issue, EventDispatchOption.ISSUE_ASSIGNED, false)
+}
